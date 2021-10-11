@@ -1,7 +1,7 @@
 import csv
 import sys
 
-from util import Node, StackFrontier, QueueFrontier
+from util import Node, QueueFrontier
 
 # Maps names to a set of corresponding person_ids
 names = {}
@@ -84,16 +84,33 @@ def main():
             print(f"{i + 1}: {person1} and {person2} starred in {movie}")
 
 
-def shortest_path(source, target):
+def shortest_path(source_id, target_id):
     """
     Returns the shortest list of (movie_id, person_id) pairs
     that connect the source to the target.
 
     If no possible path, returns None.
     """
+    source_node = Node(state=source_id, parent=None, action=None)
+    frontier = QueueFrontier()
+    frontier.add(source_node)
+    explored = set()
 
-    # TODO
-    raise NotImplementedError
+    while not frontier.empty():
+        current_node = frontier.remove()
+        current_person_id = current_node.state
+        explored.add(current_person_id)
+
+        for movie_id, person_id in neighbors_for_person(current_person_id):
+            new_node = Node(state=person_id, parent=current_node, action=movie_id)
+
+            if person_id == target_id:
+                return backtrack_path(new_node)
+
+            elif person_id not in explored and not frontier.contains_state(person_id):
+                frontier.add(new_node)
+
+    return None
 
 
 def person_id_for_name(name):
@@ -133,6 +150,17 @@ def neighbors_for_person(person_id):
         for person_id in movies[movie_id]["stars"]:
             neighbors.add((movie_id, person_id))
     return neighbors
+
+
+def backtrack_path(node: Node):
+    path = []
+    while node.parent:
+        movie_id = node.action
+        person_id = node.state
+        path.insert(0, (movie_id, person_id))
+        node = node.parent
+
+    return path
 
 
 if __name__ == "__main__":
