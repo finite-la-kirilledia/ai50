@@ -7,6 +7,8 @@ X = "X"
 O = "O"
 EMPTY = None
 
+INF = float('inf')
+
 
 def initial_state():
     """
@@ -128,36 +130,44 @@ def minimax(board):
         return None
 
     if player(board) == X:
-        return max_value(board)[1]
+        return max_value(board, -INF, INF)[1]
     else:
-        return min_value(board)[1]
+        return min_value(board, -INF, INF)[1]
 
 
-def max_value(board):
+def max_value(board, alpha, beta):
     if terminal(board):
         return utility(board), None
 
-    max_eval = float('-inf')
+    max_eval = -INF
     max_action = None
     for action in actions(board):
-        eval = min_value(result(board, action))
+        eval = min_value(result(board, action), alpha, beta)
         if eval[0] > max_eval:
             max_eval = eval[0]
             max_action = action
 
+        alpha = max(alpha, eval[0])
+        if beta <= alpha:
+            break
+
     return max_eval, max_action
 
 
-def min_value(board):
+def min_value(board, alpha, beta):
     if terminal(board):
         return utility(board), None
 
-    min_eval = float('+inf')
+    min_eval = INF
     min_action = None
     for action in actions(board):
-        eval = max_value(result(board, action))
+        eval = max_value(result(board, action), alpha, beta)
         if eval[0] < min_eval:
             min_eval = eval[0]
             min_action = action
+
+        beta = min(beta, eval[0])
+        if beta <= alpha:
+            break
 
     return min_eval, min_action
