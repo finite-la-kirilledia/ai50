@@ -41,9 +41,7 @@ def actions(board):
     for i in range(row_count):
         for j in range(column_count):
             if board[i][j] == EMPTY:
-                empty_squares.add(
-                    (i, j)
-                )
+                empty_squares.add((i, j))
 
     return empty_squares
 
@@ -67,28 +65,28 @@ def winner(board):
     """
     Returns the winner of the game, if there is one.
     """
-    side_length = len(board)
+    win_pattern_length = len(board)
 
     for row in board:
-        if row.count(X) == side_length:
+        if row.count(X) == win_pattern_length:
             return X
-        elif row.count(O) == side_length:
+        elif row.count(O) == win_pattern_length:
             return O
 
     for column in zip(*board):
-        if column.count(X) == side_length:
+        if column.count(X) == win_pattern_length:
             return X
-        elif column.count(O) == side_length:
+        elif column.count(O) == win_pattern_length:
             return O
 
     diagonals = [
-        [board[i][i] for i in range(side_length)],
-        [board[0][2], board[1][1], board[2][0]]
+        [board[i][i] for i in range(win_pattern_length)],
+        [board[i][j] for i, j in zip(range(win_pattern_length), range(win_pattern_length)[::-1])]
     ]
     for diagonal in diagonals:
-        if diagonal.count(X) == side_length:
+        if diagonal.count(X) == win_pattern_length:
             return X
-        if diagonal.count(O) == side_length:
+        if diagonal.count(O) == win_pattern_length:
             return O
 
     return None
@@ -98,13 +96,15 @@ def terminal(board):
     """
     Returns True if game is over, False otherwise.
     """
-    if winner(board):
+    if winner(board) is not None:
         return True
 
     for row in board:
         for column in row:
             if column == EMPTY:
                 return False
+
+    return True
 
 
 def utility(board):
@@ -127,41 +127,37 @@ def minimax(board):
     if terminal(board):
         return None
 
-    if (player(board)) == X:
-        return max_value_move(board)[1]
+    if player(board) == X:
+        return max_value(board)[1]
     else:
-        return min_value_move(board)[1]
+        return min_value(board)[1]
 
 
-def max_value_move(board):
+def max_value(board):
     if terminal(board):
         return utility(board), None
 
-    max_value = float('-inf')
-    max_move = None
+    max_eval = float('-inf')
+    max_action = None
     for action in actions(board):
-        enemy_min_value_move = min_value_move(result(board, action))
-        enemy_min_value = enemy_min_value_move[0]
-        #   enemy_min_move = enemy_min_value_move[1]
-        if enemy_min_value > max_value:
-            max_value = enemy_min_value
-            max_move = action
+        eval = min_value(result(board, action))
+        if eval[0] > max_eval:
+            max_eval = eval[0]
+            max_action = action
 
-    return max_value, max_move
+    return max_eval, max_action
 
 
-def min_value_move(board):
+def min_value(board):
     if terminal(board):
         return utility(board), None
 
-    min_value = float('inf')
-    min_move = None
+    min_eval = float('+inf')
+    min_action = None
     for action in actions(board):
-        enemy_max_value_move = max_value_move(result(board, action))
-        enemy_max_value = enemy_max_value_move[0]
-        #   enemy_max_move = enemy_max_value_move[1]
-        if enemy_max_value < min_value:
-            min_value = enemy_max_value
-            min_move = action
+        eval = max_value(result(board, action))
+        if eval[0] < min_eval:
+            min_eval = eval[0]
+            min_action = action
 
-    return min_value, min_move
+    return min_eval, min_action
