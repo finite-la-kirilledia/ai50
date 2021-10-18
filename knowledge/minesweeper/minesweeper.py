@@ -278,15 +278,10 @@ class MinesweeperAI():
         return self.make_random_move()
 
     def get_nearby_cells(self, cell):
-        row_indexes_range = list(range(cell[0] - 1, cell[0] + 2))
-        column_indexes_range = list(range(cell[1] - 1, cell[1] + 2))
-
         nearby_cells = set()
-        for row_index in row_indexes_range:
-            for column_index in column_indexes_range:
-                if not (row_index < 0 or row_index > self.height - 1) \
-                        and not (column_index < 0 or column_index > self.width - 1) and \
-                        (row_index, column_index) != cell:
-                    nearby_cells.add((row_index, column_index))
+        for i in range(cell[0] - 1, cell[0] + 2):
+            for j in range(cell[1] - 1, cell[1] + 2):
+                if not (i < 0 or i > self.height - 1) and not (j < 0 or j > self.width - 1) and (i, j) != cell:
+                    nearby_cells.add((i, j))
 
         return nearby_cells
