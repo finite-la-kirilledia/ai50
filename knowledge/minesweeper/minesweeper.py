@@ -106,7 +106,7 @@ class Sentence():
         """
         if len(self.cells) == self.count:
             return self.cells
-        return None
+        return set()
 
     def known_safes(self):
         """
@@ -114,7 +114,7 @@ class Sentence():
         """
         if self.count == 0:
             return self.cells
-        return None
+        return set()
 
     def mark_mine(self, cell):
         """
@@ -191,32 +191,20 @@ class MinesweeperAI():
         self.moves_made.add(cell)
         self.mark_safe(cell)
 
-        nearby_cells = self.get_nearby_cells(cell)
-
-        # add a new sentence
-        cells = set()
-        for cell in nearby_cells:
-            if cell not in self.safes:
-                cells.add(cell)
-        self.knowledge.append(Sentence(cells=cells, count=count))
-
-        # mark mines
-        for cell in nearby_cells:
-            if cell in self.mines:
-                self.mark_mine(cell)
+        new_sentence = Sentence(cells=self.get_nearby_cells(cell), count=count)
+        [new_sentence.mark_safe(cell) for cell in self.safes]
+        [new_sentence.mark_mine(cell) for cell in self.mines]
+        self.knowledge.append(new_sentence)
 
         self.update_knowledge()
 
-        safe_cells = set()
-        mine_cells = set()
+        new_safes = set()
+        new_mines = set()
         for sentence in self.knowledge:
-            if sentence.count == 0:
-                [safe_cells.add(cell) for cell in sentence.cells]
-            elif len(sentence.cells) == sentence.count:
-                [mine_cells.add(cell) for cell in sentence.cells]
-
-        [self.mark_safe(cell) for cell in safe_cells]
-        [self.mark_mine(cell) for cell in mine_cells]
+            new_safes.update(sentence.known_safes())
+            new_mines.update(sentence.known_mines())
+        [self.mark_safe(cell) for cell in new_safes]
+        [self.mark_mine(cell) for cell in new_mines]
 
         self.update_knowledge()
 
