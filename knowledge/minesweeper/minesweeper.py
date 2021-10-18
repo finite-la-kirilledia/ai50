@@ -193,17 +193,17 @@ class MinesweeperAI():
 
         nearby_cells = self.get_nearby_cells(cell)
 
-        # construct a new sentence
-        new_cells = set()
-        for nearby_cell in nearby_cells:
-            if nearby_cell not in self.safes:
-                new_cells.add(nearby_cell)
-        self.knowledge.append(Sentence(cells=new_cells, count=count))
+        # add a new sentence
+        cells = set()
+        for cell in nearby_cells:
+            if cell not in self.safes:
+                cells.add(cell)
+        self.knowledge.append(Sentence(cells=cells, count=count))
 
         # mark mines
-        for nearby_cell in nearby_cells:
-            if nearby_cell in self.mines:
-                self.mark_mine(nearby_cell)
+        for cell in nearby_cells:
+            if cell in self.mines:
+                self.mark_mine(cell)
 
         self.update_knowledge()
 
@@ -221,21 +221,29 @@ class MinesweeperAI():
         self.update_knowledge()
 
     def update_knowledge(self):
+        repeat = False
+
         for sentence1, sentence2 in zip(self.knowledge[0::2], self.knowledge[1::2]):
             cells1 = sentence1.cells
             cells2 = sentence2.cells
-            if cells1.issubset(cells2):
+            if cells1 == cells2:
+                continue
+            elif cells1.issubset(cells2):
                 diff = cells2 - cells1
             elif cells2.issubset(cells1):
                 diff = cells1 - cells2
             else:
-                return
+                continue
 
-            new_knowledge = Sentence(cells=diff, count=abs(sentence1.count - sentence2.count))
-            if new_knowledge not in self.knowledge:
-                self.knowledge.append(new_knowledge)
+            new_sentence = Sentence(cells=diff, count=abs(sentence1.count - sentence2.count))
+            if new_sentence not in self.knowledge:
+                self.knowledge.append(new_sentence)
+                repeat = True
 
         self.remove_empty_sentences()
+
+        if repeat:
+            self.update_knowledge()
 
     def remove_empty_sentences(self):
         empty_sentences = []
