@@ -84,18 +84,19 @@ def sample_pagerank(corpus, damping_factor, n):
     PageRank values should sum to 1.
     """
     starting_page = random.choice(list(corpus.keys()))
-    ranks = {}
+    samples = {}
     for page in corpus:
-        ranks[page] = 0
+        samples[page] = 0
 
     current_page = starting_page
-    for i in range(n - 1):
+    for i in range(n):
         model = transition_model(corpus, current_page, damping_factor)
         current_page = random.choices(list(model.keys()), list(model.values()))[0]
-        ranks[current_page] += 1
+        samples[current_page] += 1
 
-    for rank in ranks:
-        ranks[rank] = ranks[rank] / n
+    ranks = {}
+    for page in samples:
+        ranks[page] = samples[page] / n
 
     return ranks
 
@@ -117,16 +118,17 @@ def iterate_pagerank(corpus, damping_factor):
     repeat = True
     while repeat:
         old_ranks = ranks.copy()
-        for reference_page in corpus:
-            ranks[reference_page] = (1 - DAMPING) / len(corpus)
-            for page in corpus:
-                if reference_page in corpus[page]:
-                    ranks[reference_page] += DAMPING * ranks[page] / len(corpus[page])
-                if not corpus[page]:
-                    ranks[reference_page] += DAMPING * ranks[page] / len(corpus)
+        for page in corpus:
+            ranks[page] = (1 - DAMPING) / n
+            for link in corpus:
+                if page in corpus[link]:
+                    num_links = len(corpus[link])
+                    ranks[page] += DAMPING * ranks[link] / num_links
+                if not corpus[link]:
+                    ranks[page] += DAMPING * ranks[link] / n
 
         repeat = False
-        for rank in old_ranks:
+        for rank in ranks:
             if abs(ranks[rank] - old_ranks[rank]) > 0.001:
                 repeat = True
                 break
