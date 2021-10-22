@@ -178,16 +178,17 @@ def normalize(probabilities):
     Update `probabilities` such that each probability distribution
     is normalized (i.e., sums to 1, with relative proportions the same).
     """
-    for person in probabilities.keys():
-        trait_distribution = probabilities[person]['trait'].values()
-        alpha = 1 / sum(trait_distribution)
-        for d in probabilities[person]['trait']:
-            probabilities[person]['trait'][d] = alpha * probabilities[person]['trait'][d]
+    people = probabilities.keys()
+    for person in people:
+        distribution = probabilities[person]['trait'].values()
+        alpha = 1 / sum(distribution)
+        for distribution_element in probabilities[person]['trait']:
+            probabilities[person]['trait'][distribution_element] *= alpha
 
-        gene_distribution = probabilities[person]['gene'].values()
-        alpha = 1 / sum(gene_distribution)
-        for d in probabilities[person]['gene']:
-            probabilities[person]['gene'][d] = alpha * probabilities[person]['gene'][d]
+        distribution = probabilities[person]['gene'].values()
+        alpha = 1 / sum(distribution)
+        for distribution_element in probabilities[person]['gene']:
+            probabilities[person]['gene'][distribution_element] *= alpha
 
 
 def get_genes_count(person, zero_genes, one_gene, two_genes):
