@@ -151,7 +151,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
             father = people[person]["father"]
             father_genes_count = get_genes_count(father, zero_genes, one_gene, two_genes)
 
-            joint_probability *= transfer_genes_count_prob(mother_genes_count, father_genes_count, genes_count) * \
+            joint_probability *= obtain_genes_count_prob(genes_count, mother_genes_count, father_genes_count) * \
                                  PROBS["trait"][genes_count][person in have_trait]
 
     return joint_probability
@@ -164,7 +164,13 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     Which value for each distribution is updated depends on whether
     the person is in `have_gene` and `have_trait`, respectively.
     """
-    raise NotImplementedError
+    people = probabilities.keys()
+    zero_genes = [person for person in people if person not in one_gene and person not in two_genes]
+
+    for person in people:
+        genes_count = get_genes_count(person, zero_genes, one_gene, two_genes)
+        probabilities[person]["gene"][genes_count] += p
+        probabilities[person]["trait"][person in have_trait] += p
 
 
 def normalize(probabilities):
@@ -172,7 +178,17 @@ def normalize(probabilities):
     Update `probabilities` such that each probability distribution
     is normalized (i.e., sums to 1, with relative proportions the same).
     """
-    raise NotImplementedError
+    for person in probabilities.keys():
+        trait_distribution = probabilities[person]['trait'].values()
+        alpha = 1 / sum(trait_distribution)
+        probabilities[person]['trait'][0] = alpha * probabilities[person]['trait'][0]
+        probabilities[person]['trait'][1] = alpha * probabilities[person]['trait'][1]
+
+        gene_distribution = probabilities[person]['gene'].values()
+        alpha = 1 / sum(gene_distribution)
+        probabilities[person]['gene'][0] = alpha * probabilities[person]['gene'][0]
+        probabilities[person]['gene'][1] = alpha * probabilities[person]['gene'][1]
+        probabilities[person]['gene'][2] = alpha * probabilities[person]['gene'][2]
 
 
 def get_genes_count(person, zero_genes, one_gene, two_genes):
@@ -186,23 +202,25 @@ def get_genes_count(person, zero_genes, one_gene, two_genes):
         raise ValueError
 
 
-def transfer_one_gene_prob(num_genes):
-    if num_genes == 0:
+def obtain_gene_prob(parent_num_genes):
+    if parent_num_genes == 0:
         return PROBS["mutation"]
-    if num_genes == 2:
-        return 1 - PROBS["mutation"]
-    if num_genes == 1:
+    elif parent_num_genes == 1:
         return 0.5
+    elif parent_num_genes == 2:
+        return 1 - PROBS["mutation"]
+    else:
+        raise ValueError
 
 
-def transfer_genes_count_prob(mother_num_genes, father_num_genes, mutated_genes_count):
-    if mutated_genes_count == 0:
-        return (1 - transfer_one_gene_prob(mother_num_genes)) * (1 - transfer_one_gene_prob(father_num_genes))
-    if mutated_genes_count == 1:
-        return transfer_one_gene_prob(mother_num_genes) * (1 - transfer_one_gene_prob(father_num_genes)) \
-               + (1 - transfer_one_gene_prob(mother_num_genes)) * transfer_one_gene_prob(father_num_genes)
-    if mutated_genes_count == 2:
-        return transfer_one_gene_prob(mother_num_genes) * transfer_one_gene_prob(father_num_genes)
+def obtain_genes_count_prob(genes_count, mother_num_genes, father_num_genes):
+    if genes_count == 0:
+        return (1 - obtain_gene_prob(mother_num_genes)) * (1 - obtain_gene_prob(father_num_genes))
+    if genes_count == 1:
+        return obtain_gene_prob(mother_num_genes) * (1 - obtain_gene_prob(father_num_genes)) \
+               + (1 - obtain_gene_prob(mother_num_genes)) * obtain_gene_prob(father_num_genes)
+    if genes_count == 2:
+        return obtain_gene_prob(mother_num_genes) * obtain_gene_prob(father_num_genes)
 
 
 if __name__ == "__main__":
