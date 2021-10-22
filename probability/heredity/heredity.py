@@ -181,14 +181,13 @@ def normalize(probabilities):
     for person in probabilities.keys():
         trait_distribution = probabilities[person]['trait'].values()
         alpha = 1 / sum(trait_distribution)
-        probabilities[person]['trait'][0] = alpha * probabilities[person]['trait'][0]
-        probabilities[person]['trait'][1] = alpha * probabilities[person]['trait'][1]
+        for d in probabilities[person]['trait']:
+            probabilities[person]['trait'][d] = alpha * probabilities[person]['trait'][d]
 
         gene_distribution = probabilities[person]['gene'].values()
         alpha = 1 / sum(gene_distribution)
-        probabilities[person]['gene'][0] = alpha * probabilities[person]['gene'][0]
-        probabilities[person]['gene'][1] = alpha * probabilities[person]['gene'][1]
-        probabilities[person]['gene'][2] = alpha * probabilities[person]['gene'][2]
+        for d in probabilities[person]['gene']:
+            probabilities[person]['gene'][d] = alpha * probabilities[person]['gene'][d]
 
 
 def get_genes_count(person, zero_genes, one_gene, two_genes):
