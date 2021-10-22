@@ -142,17 +142,15 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     joint_probability = 1
     for person in people:
         genes_count = get_genes_count(person, zero_genes, one_gene, two_genes)
-        if not people[person]["mother"] and not people[person]["father"]:
-            joint_probability *= PROBS["gene"][genes_count] * PROBS["trait"][genes_count][person in have_trait]
-        else:
-            mother = people[person]["mother"]
+        mother = people[person]["mother"]
+        father = people[person]["father"]
+        if mother is not None and father is not None:
             mother_genes_count = get_genes_count(mother, zero_genes, one_gene, two_genes)
-
-            father = people[person]["father"]
             father_genes_count = get_genes_count(father, zero_genes, one_gene, two_genes)
-
-            joint_probability *= obtain_genes_count_prob(genes_count, mother_genes_count, father_genes_count) * \
+            joint_probability *= pass_genes_prob(genes_count, mother_genes_count, father_genes_count) * \
                                  PROBS["trait"][genes_count][person in have_trait]
+        else:
+            joint_probability *= PROBS["gene"][genes_count] * PROBS["trait"][genes_count][person in have_trait]
 
     return joint_probability
 
@@ -202,7 +200,17 @@ def get_genes_count(person, zero_genes, one_gene, two_genes):
         raise ValueError
 
 
-def obtain_gene_prob(parent_num_genes):
+def pass_genes_prob(genes_count, mother_num_genes, father_num_genes):
+    if genes_count == 0:
+        return (1 - pass_gene_prob(mother_num_genes)) * (1 - pass_gene_prob(father_num_genes))
+    if genes_count == 1:
+        return pass_gene_prob(mother_num_genes) * (1 - pass_gene_prob(father_num_genes)) \
+               + (1 - pass_gene_prob(mother_num_genes)) * pass_gene_prob(father_num_genes)
+    if genes_count == 2:
+        return pass_gene_prob(mother_num_genes) * pass_gene_prob(father_num_genes)
+
+
+def pass_gene_prob(parent_num_genes):
     if parent_num_genes == 0:
         return PROBS["mutation"]
     elif parent_num_genes == 1:
@@ -211,16 +219,6 @@ def obtain_gene_prob(parent_num_genes):
         return 1 - PROBS["mutation"]
     else:
         raise ValueError
-
-
-def obtain_genes_count_prob(genes_count, mother_num_genes, father_num_genes):
-    if genes_count == 0:
-        return (1 - obtain_gene_prob(mother_num_genes)) * (1 - obtain_gene_prob(father_num_genes))
-    if genes_count == 1:
-        return obtain_gene_prob(mother_num_genes) * (1 - obtain_gene_prob(father_num_genes)) \
-               + (1 - obtain_gene_prob(mother_num_genes)) * obtain_gene_prob(father_num_genes)
-    if genes_count == 2:
-        return obtain_gene_prob(mother_num_genes) * obtain_gene_prob(father_num_genes)
 
 
 if __name__ == "__main__":
