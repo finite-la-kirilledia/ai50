@@ -1,4 +1,6 @@
+import itertools
 import sys
+from queue import Queue
 
 from crossword import *
 
@@ -99,7 +101,10 @@ class CrosswordCreator():
         (Remove any values that are inconsistent with a variable's unary
          constraints; in this case, the length of the word.)
         """
-        raise NotImplementedError
+        for var in self.domains:
+            for val in list(self.domains[var]):
+                if var.length != len(val):
+                    self.domains[var].remove(val)
 
     def revise(self, x, y):
         """
@@ -110,7 +115,15 @@ class CrosswordCreator():
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
-        raise NotImplementedError
+        revised = False
+        i, j = self.crossword.overlaps[x, y]
+        for val_x in self.domains[x]:
+            for val_y in self.domains[y]:
+                if val_x[i] != val_y[j]:
+                    self.domains[x].remove(val_x)
+                    revised = True
+
+        return revised
 
     def ac3(self, arcs=None):
         """
@@ -121,7 +134,17 @@ class CrosswordCreator():
         Return True if arc consistency is enforced and no domains are empty;
         return False if one or more domains end up empty.
         """
-        raise NotImplementedError
+        if arcs is None:
+            arcs = self.init_arcs()
+
+        while len(arcs) != 0:
+            x, y = arcs.pop()
+            if self.revise(x, y):
+                if len(self.domains[x]) == 0:
+                    return False
+                # for val in self.domains[x]
+
+        return True
 
     def assignment_complete(self, assignment):
         """
@@ -166,6 +189,17 @@ class CrosswordCreator():
         If no assignment is possible, return None.
         """
         raise NotImplementedError
+
+    def init_arcs(self):
+        arcs = []
+        for var in self.domains:
+            for neighbor in self.crossword.neighbors(var):
+                arc = var, neighbor
+                synonym_arc = neighbor, var
+                if arc not in arcs and synonym_arc not in arcs:
+                    arcs.append(arc)
+
+        return arcs
 
 
 def main():
