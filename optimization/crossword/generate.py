@@ -117,11 +117,10 @@ class CrosswordCreator():
         """
         revised = False
         i, j = self.crossword.overlaps[x, y]
-        for val_x in self.domains[x]:
-            for val_y in self.domains[y]:
-                if val_x[i] != val_y[j]:
-                    self.domains[x].remove(val_x)
-                    revised = True
+        for val_x in self.domains[x].copy():
+            if all(val_x[i] != val_y[j] for val_y in self.domains[y]):
+                self.domains[x].remove(val_x)
+                revised = True
 
         return revised
 
@@ -142,7 +141,10 @@ class CrosswordCreator():
             if self.revise(x, y):
                 if len(self.domains[x]) == 0:
                     return False
-                # for val in self.domains[x]
+                for neighbor in self.crossword.neighbors(x):
+                    if neighbor not in self.domains[y]:
+                        arc = (x, neighbor)
+                        arcs.append(arc)
 
         return True
 
